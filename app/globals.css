@@ -24,10 +24,12 @@
 }
 
 html {
+  color-scheme: dark;
   background:
     radial-gradient(circle at top, rgba(110, 231, 183, 0.18), transparent 32%),
     radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.16), transparent 22%),
     linear-gradient(180deg, #08111d 0%, #10233c 52%, #07111f 100%);
+  -webkit-tap-highlight-color: rgba(110, 231, 183, 0.18);
 }
 
 body {
@@ -45,8 +47,40 @@ a {
 }
 
 button,
-input {
+input,
+label {
   font: inherit;
+  touch-action: manipulation;
+}
+
+button,
+input,
+a,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(110, 231, 183, 0.95);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 40;
+  transform: translateY(-220%);
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #052e2b;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  transition: transform 150ms ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 
 ::selection {
@@ -180,6 +214,13 @@ input {
   gap: 0.7rem;
 }
 
+.field:focus-within,
+.toggle-row:focus-within,
+.job-card:focus-visible,
+.quality-card:focus-within {
+  box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.2);
+}
+
 .field-input {
   width: 100%;
   border-radius: 1.15rem;
@@ -198,7 +239,7 @@ input {
   color: rgba(219, 234, 254, 0.45);
 }
 
-.field-input:focus {
+.field-input:focus-visible {
   border-color: rgba(110, 231, 183, 0.7);
   background: rgba(255, 255, 255, 0.08);
   transform: translateY(-1px);
@@ -218,10 +259,12 @@ input {
     transform 160ms ease,
     border-color 160ms ease,
     background 160ms ease;
+  cursor: pointer;
 }
 
 .quality-card:hover,
-.quality-card.active {
+.quality-card.active,
+.quality-card:focus-within {
   transform: translateY(-2px);
   border-color: rgba(110, 231, 183, 0.65);
   background: rgba(110, 231, 183, 0.09);
@@ -241,6 +284,7 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
   padding: 1rem 1.05rem;
+  cursor: pointer;
 }
 
 .toggle {
@@ -280,6 +324,7 @@ input {
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
+  font-variant-numeric: tabular-nums;
 }
 
 .feature-card {
@@ -299,12 +344,14 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.7rem;
   border-radius: 1.2rem;
   border: 1px solid rgba(110, 231, 183, 0.4);
   background: linear-gradient(135deg, rgba(110, 231, 183, 0.22), rgba(245, 158, 11, 0.18));
   padding: 1rem 1.15rem;
   color: white;
   font-weight: 700;
+  min-height: 3.25rem;
 }
 
 .launch-button:hover:not(:disabled),
@@ -338,6 +385,39 @@ input {
   font-weight: 700;
 }
 
+.field-error {
+  color: #fecaca;
+  line-height: 1.5;
+}
+
+.sr-only-input,
+.sr-only-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.loading-dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  animation: spin 700ms linear infinite;
+}
+
+.launch-label,
+.status-time,
+.choice-pill {
+  font-variant-numeric: tabular-nums;
+}
+
 .job-copy {
   margin-top: 0.35rem;
   color: var(--text-soft);
@@ -345,9 +425,30 @@ input {
   word-break: break-word;
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (max-width: 640px) {
   .toggle-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .field-input {
+    font-size: 16px;
   }
 }

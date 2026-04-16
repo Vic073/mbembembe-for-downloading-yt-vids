@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -126,6 +127,10 @@ export default function Home() {
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmitSpinner, setShowSubmitSpinner] = useState(false);
+  const [didHydrate, setDidHydrate] = useState(false);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const urlInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const initialTimer = window.setTimeout(() => {
@@ -142,6 +147,75 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialUrl = params.get("url");
+    const initialQuality = params.get("quality");
+    const initialShutdown = params.get("shutdown");
+    const initialJob = params.get("job");
+
+    if (initialUrl) {
+      setUrl(initialUrl);
+    }
+
+    if (
+      initialQuality === "360" ||
+      initialQuality === "480" ||
+      initialQuality === "720"
+    ) {
+      setQuality(initialQuality);
+    }
+
+    if (initialShutdown === "1") {
+      setShutdownAfterDownload(true);
+    }
+
+    if (initialJob) {
+      setActiveJobId(initialJob);
+    }
+
+    if (
+      window.matchMedia("(min-width: 768px)").matches &&
+      document.activeElement === document.body
+    ) {
+      urlInputRef.current?.focus();
+    }
+
+    setDidHydrate(true);
+  }, []);
+
+  useEffect(() => {
+    if (!didHydrate) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (url.trim()) {
+      params.set("url", url.trim());
+    } else {
+      params.delete("url");
+    }
+
+    params.set("quality", quality);
+
+    if (shutdownAfterDownload) {
+      params.set("shutdown", "1");
+    } else {
+      params.delete("shutdown");
+    }
+
+    if (activeJobId) {
+      params.set("job", activeJobId);
+    } else {
+      params.delete("job");
+    }
+
+    const nextQuery = params.toString();
+    const nextUrl = nextQuery ? `/?${nextQuery}` : "/";
+    window.history.replaceState(null, "", nextUrl);
+  }, [activeJobId, didHydrate, quality, shutdownAfterDownload, url]);
+
   const refreshJobs = useCallback(async () => {
     const response = await fetch("/api/downloads", { cache: "no-store" });
 
@@ -153,7 +227,13 @@ export default function Home() {
 
     startTransition(() => {
       setJobs(data.jobs);
-      setActiveJobId((current) => current ?? data.jobs[0]?.id ?? null);
+      setActiveJobId((current) => {
+        if (current && data.jobs.some((job) => job.id === current)) {
+          return current;
+        }
+
+        return data.jobs[0]?.id ?? null;
+      });
     });
   }, []);
 
@@ -217,21 +297,53 @@ export default function Home() {
   );
   const activeJob = jobs.find((job) => job.id === activeJobId) ?? null;
 
+  useEffect(() => {
+    const title = activeJob
+      ? `Mbembembe Downloader - ${activeJob.status}`
+      : "Mbembembe Downloader";
+    document.title = title;
+  }, [activeJob]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const trimmedUrl = url.trim();
+
+    setUrl(trimmedUrl);
     setIsSubmitting(true);
+    setUrlError(null);
     setSubmitMessage(null);
     setSubmitError(null);
 
+    const spinnerDelayStarted = performance.now();
+    const spinnerDelay = window.setTimeout(() => {
+      setShowSubmitSpinner(true);
+    }, 180);
+
     try {
+      if (!trimmedUrl) {
+        setUrlError("Paste a video or playlist URL to start a job.");
+        setSubmitError("A URL is required before the backend can start.");
+        urlInputRef.current?.focus();
+        return;
+      }
+
+      try {
+        new URL(trimmedUrl);
+      } catch {
+        setUrlError("That does not look like a valid URL yet.");
+        setSubmitError("Check the URL and try again.");
+        urlInputRef.current?.focus();
+        return;
+      }
+
       const response = await fetch("/api/downloads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          url,
+          url: trimmedUrl,
           quality,
           shutdownAfterDownload,
         }),
@@ -258,12 +370,25 @@ export default function Home() {
     } catch {
       setSubmitError("The downloader API is not reachable right now.");
     } finally {
+      window.clearTimeout(spinnerDelay);
+
+      if (showSubmitSpinner) {
+        const elapsed = performance.now() - spinnerDelayStarted;
+        if (elapsed < 550) {
+          await new Promise((resolve) => window.setTimeout(resolve, 550 - elapsed));
+        }
+      }
+
+      setShowSubmitSpinner(false);
       setIsSubmitting(false);
     }
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 py-8 sm:px-8 lg:px-10">
+    <main
+      id="main-content"
+      className="mx-auto flex w-full max-w-7xl flex-1 scroll-mt-6 flex-col px-5 py-8 sm:px-8 lg:px-10"
+    >
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="hero-panel overflow-hidden rounded-[2rem] p-7 sm:p-10">
           <div className="mb-8 flex flex-wrap items-center gap-3">
@@ -363,34 +488,63 @@ export default function Home() {
 
           <form className="stack-gap" onSubmit={handleSubmit}>
             <label className="field">
-              <span className="field-label">Video or playlist URL</span>
+              <span className="field-label" id="url-label">
+                Video or playlist URL
+              </span>
               <input
+                ref={urlInputRef}
                 className="field-input"
                 type="url"
+                inputMode="url"
+                autoComplete="off"
+                spellCheck={false}
+                name="source_url"
                 placeholder="https://youtube.com/playlist?list=..."
                 value={url}
-                onChange={(event) => setUrl(event.target.value)}
+                aria-describedby={urlError ? "url-error url-help" : "url-help"}
+                aria-invalid={urlError ? "true" : "false"}
+                onChange={(event) => {
+                  setUrl(event.target.value);
+                  if (urlError) {
+                    setUrlError(null);
+                  }
+                }}
               />
+              <span className="field-help" id="url-help">
+                Paste a single video or a playlist. The value stays in the URL so
+                refresh and share still work.
+              </span>
+              {urlError ? (
+                <span className="field-error" id="url-error" role="alert">
+                  {urlError}
+                </span>
+              ) : null}
             </label>
 
-            <div>
-              <span className="field-label">Quality cap</span>
-              <div className="mt-3 grid gap-3">
+            <fieldset className="grid gap-3">
+              <legend className="field-label">Quality cap</legend>
+              <div className="mt-1 grid gap-3">
                 {qualityOptions.map((option) => (
-                  <button
+                  <label
                     key={option.value}
                     className={quality === option.value ? "quality-card active" : "quality-card"}
-                    type="button"
-                    onClick={() => setQuality(option.value)}
                   >
+                    <input
+                      checked={quality === option.value}
+                      className="sr-only-input"
+                      name="quality"
+                      type="radio"
+                      value={option.value}
+                      onChange={() => setQuality(option.value)}
+                    />
                     <span>
                       <strong>{option.label}</strong> {option.tagline}
                     </span>
                     <span className="quality-note">{option.note}</span>
-                  </button>
+                  </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             <label className="toggle-row">
               <div>
@@ -400,23 +554,34 @@ export default function Home() {
                   request with a 60 second countdown.
                 </p>
               </div>
-              <button
+              <input
+                checked={shutdownAfterDownload}
+                className="sr-only-input"
+                name="shutdown_after_download"
+                type="checkbox"
+                onChange={(event) => setShutdownAfterDownload(event.target.checked)}
+              />
+              <span
+                aria-hidden="true"
                 className={shutdownAfterDownload ? "toggle active" : "toggle"}
-                type="button"
-                aria-pressed={shutdownAfterDownload}
-                onClick={() => setShutdownAfterDownload((value) => !value)}
               >
                 <span className="toggle-thumb" />
-              </button>
+              </span>
             </label>
 
-            <div className="stack-gap">
+            <div className="stack-gap" aria-live="polite" aria-atomic="true">
               <button
                 className="launch-button"
                 type="submit"
-                disabled={isSubmitting || !url.trim()}
+                disabled={isSubmitting}
               >
-                {isSubmitting ? "Sending to backend..." : "Start Mbembembe Job"}
+                <span className="launch-label">Start Mbembembe Job</span>
+                {showSubmitSpinner ? (
+                  <span aria-hidden="true" className="loading-dot" />
+                ) : null}
+                <span className="sr-only-status">
+                  {isSubmitting ? " Sending to backend…" : ""}
+                </span>
               </button>
               {submitMessage ? <p className="status-good">{submitMessage}</p> : null}
               {submitError ? <p className="status-wait">{submitError}</p> : null}
@@ -481,6 +646,7 @@ export default function Home() {
                   key={job.id}
                   type="button"
                   className={activeJobId === job.id ? "job-card active" : "job-card"}
+                  aria-pressed={activeJobId === job.id}
                   onClick={() => setActiveJobId(job.id)}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -497,7 +663,11 @@ export default function Home() {
 
             <div className="mt-5">
               <p className="mini-label">Latest log lines</p>
-              <pre className="command-box mt-3 min-h-56">
+              <pre
+                className="command-box mt-3 min-h-56"
+                aria-live="polite"
+                aria-label="Latest job log output"
+              >
                 <code>
                   {activeLogTail ||
                     "Choose a job to inspect its log. Output from yt-dlp will appear here."}
