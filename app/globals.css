@@ -15,8 +15,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Segoe UI", "Trebuchet MS", sans-serif;
+  --font-mono: "Consolas", "Courier New", monospace;
 }
 
 * {
@@ -32,7 +32,7 @@ html {
 
 body {
   color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
   background:
     radial-gradient(circle at top, rgba(110, 231, 183, 0.16), transparent 28%),
     radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.12), transparent 24%),
@@ -284,6 +284,65 @@ input {
 
 .feature-card {
   min-height: 100%;
+}
+
+.launch-button,
+.job-card {
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+.launch-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.2rem;
+  border: 1px solid rgba(110, 231, 183, 0.4);
+  background: linear-gradient(135deg, rgba(110, 231, 183, 0.22), rgba(245, 158, 11, 0.18));
+  padding: 1rem 1.15rem;
+  color: white;
+  font-weight: 700;
+}
+
+.launch-button:hover:not(:disabled),
+.job-card:hover {
+  transform: translateY(-2px);
+}
+
+.launch-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.job-card {
+  display: grid;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+  border-radius: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem;
+}
+
+.job-card.active {
+  border-color: rgba(110, 231, 183, 0.6);
+  background: rgba(110, 231, 183, 0.09);
+}
+
+.job-title {
+  color: white;
+  font-weight: 700;
+}
+
+.job-copy {
+  margin-top: 0.35rem;
+  color: var(--text-soft);
+  line-height: 1.6;
+  word-break: break-word;
 }
 
 @media (max-width: 640px) {
