@@ -3,14 +3,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Mbembembe Downloader",
-  description:
-    "A Next.js control panel for late-night yt-dlp downloads inspired by the original Mbembembe batch script.",
+  description: "Minimal night-limit yt-dlp dashboard.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#07111f",
+  themeColor: "#050505",
 };
 
 export default function RootLayout({
@@ -19,11 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
+    <html lang="en" className="dark">
+      <body className="antialiased bg-background text-foreground">
         {children}
       </body>
     </html>
