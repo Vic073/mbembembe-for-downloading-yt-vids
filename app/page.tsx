@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   startTransition,
@@ -114,6 +114,42 @@ function describeJobStatus(job: DownloadJob) {
   }
 
   return `Queued at ${formatDateTime(job.createdAt)}.`;
+}
+
+function getStatusLabel(status: DownloadJob["status"]) {
+  if (status === "waiting") {
+    return "Waiting";
+  }
+
+  if (status === "running") {
+    return "Running";
+  }
+
+  if (status === "succeeded") {
+    return "Complete";
+  }
+
+  if (status === "failed") {
+    return "Failed";
+  }
+
+  return "Queued";
+}
+
+function getStatusTone(status: DownloadJob["status"]) {
+  if (status === "succeeded") {
+    return "good";
+  }
+
+  if (status === "failed") {
+    return "bad";
+  }
+
+  if (status === "running") {
+    return "live";
+  }
+
+  return "idle";
 }
 
 export default function Home() {
@@ -308,17 +344,16 @@ export default function Home() {
     event.preventDefault();
 
     const trimmedUrl = url.trim();
+    const spinnerDelayStarted = performance.now();
+    const spinnerDelay = window.setTimeout(() => {
+      setShowSubmitSpinner(true);
+    }, 180);
 
     setUrl(trimmedUrl);
     setIsSubmitting(true);
     setUrlError(null);
     setSubmitMessage(null);
     setSubmitError(null);
-
-    const spinnerDelayStarted = performance.now();
-    const spinnerDelay = window.setTimeout(() => {
-      setShowSubmitSpinner(true);
-    }, 180);
 
     try {
       if (!trimmedUrl) {
@@ -387,60 +422,107 @@ export default function Home() {
   return (
     <main
       id="main-content"
-      className="mx-auto flex w-full max-w-7xl flex-1 scroll-mt-6 flex-col px-5 py-8 sm:px-8 lg:px-10"
+      className="mx-auto flex w-full max-w-[92rem] flex-1 scroll-mt-6 flex-col px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
     >
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="hero-panel overflow-hidden rounded-[2rem] p-7 sm:p-10">
-          <div className="mb-8 flex flex-wrap items-center gap-3">
+      <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
+        <section className="hero-panel rounded-[2rem] p-6 sm:p-8 lg:p-10">
+          <div className="hero-noise" aria-hidden="true" />
+          <div className="hero-topline">
             <span className="badge">Late-night bandwidth mode</span>
             <span className="badge badge-muted">Next.js 16 App Router</span>
             <span className="badge badge-muted">Local yt-dlp backend</span>
           </div>
 
-          <div className="max-w-3xl space-y-6">
-            <p className="text-sm uppercase tracking-[0.35em] text-[var(--text-soft)]">
-              Mbembembe Downloader
-            </p>
-            <h1 className="max-w-2xl text-5xl font-semibold tracking-[-0.04em] text-white sm:text-6xl">
-              Queue real downloads from the browser and let the machine handle the night shift.
+          <div className="hero-copy">
+            <p className="eyebrow">Mbembembe Downloader</p>
+            <h1 className="hero-title">
+              Your night-data command center, not another pretty wrapper.
             </h1>
-            <p className="max-w-2xl text-lg leading-8 text-[var(--text-soft)]">
-              The web app now talks to a local Node route that writes logs,
-              waits for your off-peak window, runs `yt-dlp`, and can request a
-              Windows shutdown when the job succeeds.
+            <p className="hero-subtitle">
+              Paste a link, choose the cap, and let the desktop do the heavy
+              lifting. Jobs wait for Mbembembe hours, run locally through
+              <span translate="no"> yt-dlp </span>
+              and feed their logs straight back into the app.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            <article className="stat-card">
-              <p className="stat-label">Window</p>
-              <p className="stat-value">23:00 - 05:59</p>
-              <p className="stat-copy">Jobs outside the window stay queued.</p>
-            </article>
-            <article className="stat-card">
-              <p className="stat-label">Backend</p>
-              <p className="stat-value">Route Handler</p>
-              <p className="stat-copy">Node runtime launches `yt-dlp` locally.</p>
-            </article>
-            <article className="stat-card">
-              <p className="stat-label">Logs</p>
-              <p className="stat-value">Live tail</p>
-              <p className="stat-copy">Recent output is visible from the app.</p>
-            </article>
-          </div>
-        </div>
+          <div className="hero-bottom">
+            <div className="hero-grid">
+              <article className="stat-card stat-card-strong">
+                <p className="stat-label">Tonight&apos;s window</p>
+                <p className="stat-value">23:00 - 05:59</p>
+                <p className="stat-copy">
+                  Outside the window, jobs hold position and start automatically
+                  when the cheap hours open.
+                </p>
+              </article>
+              <article className="stat-card">
+                <p className="stat-label">Engine</p>
+                <p className="stat-value">Node + yt-dlp</p>
+                <p className="stat-copy">
+                  Your browser becomes a control surface, not the download worker.
+                </p>
+              </article>
+              <article className="stat-card">
+                <p className="stat-label">Log feedback</p>
+                <p className="stat-value">Live tail</p>
+                <p className="stat-copy">
+                  Every accepted job streams status back into the queue monitor.
+                </p>
+              </article>
+            </div>
 
-        <div className="panel stack-gap rounded-[2rem] p-6 sm:p-8">
+            <aside className="hero-callout">
+              <p className="mini-label">Current mode</p>
+              <div className="hero-callout-row">
+                <span className="hero-orb" aria-hidden="true" />
+                <div>
+                  <p className="hero-callout-value">
+                    {windowState?.inWindow ? "Download lane open" : "Waiting for night"}
+                  </p>
+                  <p className="hero-callout-copy">
+                    {windowState?.detail ??
+                      "The app checks your local clock before a queued job starts."}
+                  </p>
+                </div>
+              </div>
+              <div className="hero-chip-grid">
+                <span className="choice-pill">{selectedQuality.label}</span>
+                <span className="choice-pill">
+                  {shutdownAfterDownload ? "Shutdown armed" : "Shutdown off"}
+                </span>
+                <span className="choice-pill">
+                  {jobs.length === 0
+                    ? "No queued jobs"
+                    : `${jobs.length} tracked job${jobs.length === 1 ? "" : "s"}`}
+                </span>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <aside className="panel stack-gap rounded-[2rem] p-5 sm:p-6">
           <div>
-            <p className="eyebrow">Live session</p>
+            <p className="eyebrow">Situation room</p>
             <h2 className="mt-2 text-2xl font-semibold text-white">
-              Tonight&apos;s downloader state
+              Live machine state
             </h2>
           </div>
 
-          <div className="status-box">
-            <p className="status-label">Local time</p>
-            <p className="status-time">{now ? formatClock(now) : "--:--:--"}</p>
+          <div className="status-box status-box-primary">
+            <div className="status-head">
+              <div>
+                <p className="status-label">Local time</p>
+                <p className="status-time">{now ? formatClock(now) : "--:--:--"}</p>
+              </div>
+              <span
+                className={
+                  windowState?.inWindow ? "status-chip status-chip-live" : "status-chip"
+                }
+              >
+                {windowState?.inWindow ? "Open now" : "Stand by"}
+              </span>
+            </div>
             <p className={windowState?.inWindow ? "status-good" : "status-wait"}>
               {windowState?.label ?? "Checking Mbembembe window..."}
             </p>
@@ -450,44 +532,69 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
-            <p className="status-label">Current selection</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <span className="choice-pill">{selectedQuality.label}</span>
-              <span className="choice-pill">
-                {shutdownAfterDownload ? "Shutdown after download" : "Stay awake"}
-              </span>
-              <span className="choice-pill">
-                {url ? "URL loaded" : "Waiting for URL"}
-              </span>
+          <div className="status-grid">
+            <div className="status-mini-card">
+              <p className="status-label">Selection</p>
+              <p className="status-mini-value">{selectedQuality.label}</p>
+              <p className="status-copy">
+                {shutdownAfterDownload
+                  ? "Shutdown armed after success."
+                  : "Machine stays awake."}
+              </p>
+            </div>
+            <div className="status-mini-card">
+              <p className="status-label">Input</p>
+              <p className="status-mini-value">{url ? "Loaded" : "Empty"}</p>
+              <p className="status-copy">
+                {url
+                  ? "The current URL is synced into the address bar."
+                  : "Paste a link to prime the next run."}
+              </p>
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
-            <p className="status-label">Latest job</p>
-            <p className="mt-3 text-lg font-semibold text-white">
-              {activeJob ? activeJob.status.toUpperCase() : "No jobs yet"}
-            </p>
+          <div className="latest-job-card">
+            <div className="latest-job-head">
+              <div>
+                <p className="status-label">Latest job</p>
+                <p className="latest-job-title">
+                  {activeJob
+                    ? `${activeJob.quality}p ${getStatusLabel(activeJob.status)}`
+                    : "No active job yet"}
+                </p>
+              </div>
+              <span
+                className={`status-chip status-chip-${activeJob ? getStatusTone(activeJob.status) : "idle"}`}
+              >
+                {activeJob ? getStatusLabel(activeJob.status) : "Idle"}
+              </span>
+            </div>
             <p className="status-copy">
               {activeJob
                 ? describeJobStatus(activeJob)
-                : "Start a job and the backend status will appear here."}
+                : "Start a job and the current queue leader will appear here with richer context."}
             </p>
           </div>
-        </div>
+        </aside>
       </section>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-        <div className="panel rounded-[2rem] p-6 sm:p-8">
-          <div className="mb-6">
-            <p className="eyebrow">Build the job</p>
-            <h2 className="mt-2 text-3xl font-semibold text-white">
-              Download recipe
-            </h2>
+      <section className="mt-5 grid gap-5 xl:grid-cols-[0.72fr_1.28fr]">
+        <section className="panel rounded-[2rem] p-5 sm:p-6 lg:p-7">
+          <div className="composer-head">
+            <div>
+              <p className="eyebrow">Build the job</p>
+              <h2 className="mt-2 text-3xl font-semibold text-white">
+                Download recipe
+              </h2>
+            </div>
+            <p className="composer-copy">
+              Pick the ceiling, arm the shutdown if you want it, then hand the run
+              off to the queue.
+            </p>
           </div>
 
-          <form className="stack-gap" onSubmit={handleSubmit}>
-            <label className="field">
+          <form className="stack-gap mt-7" onSubmit={handleSubmit}>
+            <label className="field field-featured">
               <span className="field-label" id="url-label">
                 Video or playlist URL
               </span>
@@ -523,7 +630,7 @@ export default function Home() {
 
             <fieldset className="grid gap-3">
               <legend className="field-label">Quality cap</legend>
-              <div className="mt-1 grid gap-3">
+              <div className="quality-grid mt-1">
                 {qualityOptions.map((option) => (
                   <label
                     key={option.value}
@@ -537,8 +644,9 @@ export default function Home() {
                       value={option.value}
                       onChange={() => setQuality(option.value)}
                     />
-                    <span>
-                      <strong>{option.label}</strong> {option.tagline}
+                    <span className="quality-heading">
+                      <strong>{option.label}</strong>
+                      <em>{option.tagline}</em>
                     </span>
                     <span className="quality-note">{option.note}</span>
                   </label>
@@ -561,21 +669,24 @@ export default function Home() {
                 type="checkbox"
                 onChange={(event) => setShutdownAfterDownload(event.target.checked)}
               />
-              <span
-                aria-hidden="true"
-                className={shutdownAfterDownload ? "toggle active" : "toggle"}
-              >
-                <span className="toggle-thumb" />
+              <span className="toggle-meta">
+                <span className="toggle-copy">
+                  {shutdownAfterDownload ? "Shutdown armed" : "Keep machine awake"}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={shutdownAfterDownload ? "toggle active" : "toggle"}
+                >
+                  <span className="toggle-thumb" />
+                </span>
               </span>
             </label>
 
             <div className="stack-gap" aria-live="polite" aria-atomic="true">
-              <button
-                className="launch-button"
-                type="submit"
-                disabled={isSubmitting}
-              >
-                <span className="launch-label">Start Mbembembe Job</span>
+              <button className="launch-button" type="submit" disabled={isSubmitting}>
+                <span className="launch-label">
+                  {isSubmitting ? "Starting Mbembembe Job…" : "Start Mbembembe Job"}
+                </span>
                 {showSubmitSpinner ? (
                   <span aria-hidden="true" className="loading-dot" />
                 ) : null}
@@ -587,96 +698,128 @@ export default function Home() {
               {submitError ? <p className="status-wait">{submitError}</p> : null}
             </div>
           </form>
-        </div>
+        </section>
 
-        <div className="stack-gap">
-          <div className="panel rounded-[2rem] p-6 sm:p-8">
-            <p className="eyebrow">Command preview</p>
-            <h2 className="mt-2 text-3xl font-semibold text-white">
-              What the backend runs
-            </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--text-soft)]">
-              The API route starts `yt-dlp` on the same machine running Next.js.
-              Downloads are written under the project folder, and every job gets
-              its own log file.
+        <div className="monitor-grid">
+          <section className="panel rounded-[2rem] p-5 sm:p-6 lg:p-7">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">Runtime</p>
+                <h2 className="mt-2 text-3xl font-semibold text-white">
+                  What the backend runs
+                </h2>
+              </div>
+              <span className="choice-pill command-tag">Local process</span>
+            </div>
+
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-soft)]">
+              The API route starts <span translate="no">yt-dlp</span> on the same
+              machine running Next.js. Downloads land inside the project folder,
+              and every job gets its own log trail.
             </p>
 
-            <pre className="command-box">
+            <pre className="command-box command-box-hero">
               <code>{commandPreview}</code>
             </pre>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="mini-card">
+            <div className="info-grid mt-5">
+              <div className="mini-card info-card">
                 <p className="mini-label">Output folder</p>
                 <p className="mini-copy">
                   {activeJob?.outputDirectory ?? "Will be created as ./downloads"}
                 </p>
               </div>
-              <div className="mini-card">
+              <div className="mini-card info-card">
                 <p className="mini-label">Log file</p>
                 <p className="mini-copy">
                   {activeJob?.logFile ?? "Will be created as ./download_logs/<job>.log"}
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="panel rounded-[2rem] p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <section className="panel rounded-[2rem] p-5 sm:p-6 lg:p-7">
+            <div className="panel-heading">
               <div>
-                <p className="eyebrow">Recent jobs</p>
+                <p className="eyebrow">Queue monitor</p>
                 <h2 className="mt-2 text-3xl font-semibold text-white">
-                  Queue and log tail
+                  Jobs and live output
                 </h2>
               </div>
               <span className="choice-pill">{jobs.length} tracked</span>
             </div>
 
-            <div className="mt-5 grid gap-3">
-              {jobs.length === 0 ? (
-                <div className="mini-card">
-                  <p className="mini-copy">
-                    No jobs yet. Start one from the form and it will show up here.
-                  </p>
-                </div>
-              ) : null}
-
-              {jobs.map((job) => (
-                <button
-                  key={job.id}
-                  type="button"
-                  className={activeJobId === job.id ? "job-card active" : "job-card"}
-                  aria-pressed={activeJobId === job.id}
-                  onClick={() => setActiveJobId(job.id)}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="job-title">{job.quality}p job</p>
-                      <p className="job-copy">{job.url}</p>
-                    </div>
-                    <span className="choice-pill">{job.status}</span>
+            <div className="queue-layout mt-6">
+              <div className="job-list">
+                {jobs.length === 0 ? (
+                  <div className="empty-state">
+                    <p className="empty-title">No jobs yet</p>
+                    <p className="mini-copy">
+                      Start one from the composer and this space turns into your
+                      run history.
+                    </p>
                   </div>
-                  <p className="job-copy">{describeJobStatus(job)}</p>
-                </button>
-              ))}
-            </div>
+                ) : null}
 
-            <div className="mt-5">
-              <p className="mini-label">Latest log lines</p>
-              <pre
-                className="command-box mt-3 min-h-56"
-                aria-live="polite"
-                aria-label="Latest job log output"
-              >
-                <code>
-                  {activeLogTail ||
-                    "Choose a job to inspect its log. Output from yt-dlp will appear here."}
-                </code>
-              </pre>
+                {jobs.map((job) => (
+                  <button
+                    key={job.id}
+                    type="button"
+                    className={activeJobId === job.id ? "job-card active" : "job-card"}
+                    aria-pressed={activeJobId === job.id}
+                    onClick={() => setActiveJobId(job.id)}
+                  >
+                    <div className="job-card-top">
+                      <div>
+                        <p className="job-title">{job.quality}p job</p>
+                        <p className="job-copy">{job.url}</p>
+                      </div>
+                      <span
+                        className={`status-chip status-chip-${getStatusTone(job.status)}`}
+                      >
+                        {getStatusLabel(job.status)}
+                      </span>
+                    </div>
+                    <p className="job-copy">{describeJobStatus(job)}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="log-panel">
+                <div className="log-panel-head">
+                  <div>
+                    <p className="mini-label">Latest log lines</p>
+                    <p className="log-panel-title">
+                      {activeJob
+                        ? `${activeJob.quality}p ${getStatusLabel(activeJob.status)}`
+                        : "Waiting for a selected job"}
+                    </p>
+                  </div>
+                  {activeJob ? (
+                    <span
+                      className={`status-chip status-chip-${getStatusTone(activeJob.status)}`}
+                    >
+                      {getStatusLabel(activeJob.status)}
+                    </span>
+                  ) : null}
+                </div>
+
+                <pre
+                  className="command-box log-box"
+                  aria-live="polite"
+                  aria-label="Latest job log output"
+                >
+                  <code>
+                    {activeLogTail ||
+                      "Choose a job to inspect its log. Output from yt-dlp will appear here."}
+                  </code>
+                </pre>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       </section>
     </main>
   );
 }
+
