@@ -1,0 +1,16 @@
+[2026-04-16T22:23:38.487Z] Job accepted for https://youtu.be/hkVAJ1SFi5E?si=Bu4CjeTU0TJ5E1Py
+[2026-04-16T22:23:38.543Z] Starting yt-dlp with quality cap 480p.
+[youtube] Extracting URL: https://youtu.be/hkVAJ1SFi5E?si=Bu4CjeTU0TJ5E1Py
+[youtube] hkVAJ1SFi5E: Downloading webpage
+WARNING: [youtube] No supported JavaScript runtime could be found. Only deno is enabled by default; to use another runtime add  --js-runtimes RUNTIME[:PATH]  to your command/config. YouTube extraction without a JS runtime has been deprecated, and some formats may be missing. See  https://github.com/yt-dlp/yt-dlp/wiki/EJS  for details on installing one
+[youtube] hkVAJ1SFi5E: Downloading android vr player API JSON
+[info] hkVAJ1SFi5E: Downloading subtitles: en, en-zh, en-zh-Hant, en-en, en-id, en-ms, en-pt, en-es, en-th, en-vi
+[info] hkVAJ1SFi5E: Downloading 1 format(s): 397+251
+[info] Writing video subtitles to: NA\NA - MULTISUB【怦然心动20岁：冬季】EP03上：吉娜空降千禧校园！新人直选心动对象共进午餐！！｜ 戚于悦刘志鑫潘纬轩张笑颜 ｜ 优酷综艺 YOUKUSHOW.en.vtt
+[download] Destination: NA\NA - MULTISUB【怦然心动20岁：冬季】EP03上：吉娜空降千禧校园！新人直选心动对象共进午餐！！｜ 戚于悦刘志鑫潘纬轩张笑颜 ｜ 优酷综艺 YOUKUSHOW.en.vtt
+[download]    1.00KiB at  115.69KiB/s (00:00:01)[download]    3.00KiB at  305.57KiB/s (00:00:01)[download]    7.00KiB at  407.34KiB/s (00:00:01)[download]   15.00KiB at  264.16KiB/s (00:00:01)[download]   31.00KiB at  103.49KiB/s (00:00:01)[download]   63.00KiB at  120.13KiB/s (00:00:01)[download]  127.00KiB at  135.22KiB/s (00:00:02)[download]  127.54KiB at  135.68KiB/s (00:00:02)[download] 100% of  127.54KiB in 00:00:02 at 62.07KiB/s
+[info] Writing video subtitles to: NA\NA - MULTISUB【怦然心动20岁：冬季】EP03上：吉娜空降千禧校园！新人直选心动对象共进午餐！！｜ 戚于悦刘志鑫潘纬轩张笑颜 ｜ 优酷综艺 YOUKUSHOW.en-zh.vtt
+ERROR: Unable to download video subtitles for 'en-zh': HTTP Error 429: Too Many Requests
+
+Process exited with code 1.
+[2026-04-16T22:23:55.733Z] Download failed.

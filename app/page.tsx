@@ -211,7 +211,7 @@ export default function Home() {
         quality,
         ']+bestaudio/best[height<=',
         quality,
-        ']" --yes-playlist --continue --no-part --retries 99 --fragment-retries 99 --write-subs --write-auto-subs --sub-langs "en.*" --embed-subs --merge-output-format mkv --no-mtime',
+        ']" --yes-playlist --continue --no-part --retries 99 --fragment-retries 99 --write-subs --write-auto-subs --sub-langs "en" --js-runtimes "node" --embed-subs --merge-output-format mkv --no-mtime',
       ].join(""),
     [quality],
   );

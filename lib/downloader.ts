@@ -35,6 +35,8 @@ type DownloadJobRecord = DownloadJobSnapshot & {
 const MBEMBEMBE_START_HOUR = 23;
 const MBEMBEMBE_END_HOUR = 5;
 const POLL_INTERVAL_MS = 30_000;
+const SUBTITLE_LANGUAGES = "en";
+const JS_RUNTIMES = "node";
 const OUTPUT_TEMPLATE =
   "%(playlist_title,Unknown)s/%(playlist_index,1)s - %(title)s.%(ext)s";
 
@@ -80,7 +82,11 @@ function buildCommandPreview(quality: DownloadQuality) {
     quality,
     ']+bestaudio/best[height<=',
     quality,
-    ']" --yes-playlist --continue --no-part --retries 99 --fragment-retries 99 --write-subs --write-auto-subs --sub-langs "en.*" --embed-subs --merge-output-format mkv --no-mtime -o "',
+    ']" --yes-playlist --continue --no-part --retries 99 --fragment-retries 99 --write-subs --write-auto-subs --sub-langs "',
+    SUBTITLE_LANGUAGES,
+    '" --js-runtimes "',
+    JS_RUNTIMES,
+    '" --embed-subs --merge-output-format mkv --no-mtime -o "',
     OUTPUT_TEMPLATE,
     '"',
   ].join("");
@@ -218,7 +224,9 @@ async function runDownload(jobId: string) {
     "--write-subs",
     "--write-auto-subs",
     "--sub-langs",
-    "en.*",
+    SUBTITLE_LANGUAGES,
+    "--js-runtimes",
+    JS_RUNTIMES,
     "--embed-subs",
     "--merge-output-format",
     "mkv",
