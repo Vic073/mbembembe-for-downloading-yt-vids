@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function isQuality(value: unknown): value is DownloadQuality {
-  return value === "360" || value === "480" || value === "720";
+  return value === "480" || value === "720" || value === "1080";
 }
 
 export async function GET() {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
   if (!isQuality(quality)) {
     return NextResponse.json(
-      { error: "Quality must be one of 360, 480, or 720." },
+      { error: "Quality must be one of 480, 720, or 1080." },
       { status: 400 },
     );
   }

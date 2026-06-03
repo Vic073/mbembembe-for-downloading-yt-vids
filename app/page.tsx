@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import LogViewer from "@/components/LogViewer";
 
 type QualityOption = {
-  value: "360" | "480" | "720";
+  value: "480" | "720" | "1080";
   label: string;
   tagline: string;
   note: string;
@@ -33,9 +33,9 @@ type DownloadJob = {
 };
 
 const qualityOptions: QualityOption[] = [
-  { value: "360", label: "360p", tagline: "Data Saver", note: "Smallest size for tight bandwidth limits." },
   { value: "480", label: "480p", tagline: "Balanced", note: "Standard night mode reliable fallback." },
-  { value: "720", label: "720p", tagline: "Max HD", note: "Crisper output while keeping caps in check." },
+  { value: "720", label: "720p", tagline: "HD", note: "Crisper output while keeping caps in check." },
+  { value: "1080", label: "1080p", tagline: "Full HD", note: "Best pick for unlimited night bundles." },
 ];
 
 function pad(value: number) { return value.toString().padStart(2, "0"); }
@@ -86,7 +86,7 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("url")) setUrl(params.get("url")!);
     const q = params.get("quality");
-    if (q === "360" || q === "480" || q === "720") setQuality(q);
+    if (q === "480" || q === "720" || q === "1080") setQuality(q);
     if (params.get("shutdown") === "1") setShutdownAfterDownload(true);
     if (params.get("job")) setActiveJobId(params.get("job"));
     setDidHydrate(true);

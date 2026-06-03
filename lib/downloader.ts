@@ -7,7 +7,7 @@ import { EventEmitter } from "node:events";
 
 export const systemEmitter = new EventEmitter();
 
-export type DownloadQuality = "360" | "480" | "720";
+export type DownloadQuality = "480" | "720" | "1080";
 export type DownloadStatus =
   | "queued"
   | "waiting"
